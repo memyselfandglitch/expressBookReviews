@@ -5,24 +5,54 @@ const regd_users = express.Router();
 
 let users = [];
 
-const isValid = (username)=>{ //returns boolean
-//write code to check is the username is valid
-}
 
-const authenticatedUser = (username,password)=>{ //returns boolean
-//write code to check if username and password match the one we have in records.
-}
-
-//only registered users can login
+const isValid = (username)=>{ 
+    if(username)return true;
+    }
+    
+const authenticatedUser = (username,password)=>{ 
+        console.log(users);
+        let auth_user=users.filter(user=>user.username===username&&user.password===password);
+        if(auth_user.length>0)return true;
+        else return false;
+    }
+    
 regd_users.post("/login", (req,res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+        let username=req.body.username;
+        let password=req.body.password;
+        if(isValid(username)&&authenticatedUser(username,password)){
+            let accessToken = jwt.sign({
+                data: {username,password}
+              }, 'access', { expiresIn: 60 * 60 });
+              req.session.authorization = {
+                accessToken
+            }
+            return res.status(200).send(accessToken);
+        
+        }
+       else res.status(200).send("Not registered");
+    });
+        
+
+regd_users.put("/review/:isbn", (req, res) => {
+    let isbn=req.params.isbn;
+    let book;
+    console.log(isbn);
+    if(isbn in books)book=books[isbn];
+    console.log(`isbn is ${isbn}`);
+    let review=req.query.review;
+    book.reviews=(review);
+    console.log(book);
+    res.send("Review successfully added");
 });
 
-// Add a book review
-regd_users.put("/auth/review/:isbn", (req, res) => {
-  //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+regd_users.delete("/review/:isbn", (req, res) => {
+    let isbn=req.params.isbn;
+    let book;
+    if(isbn in books)book=books[isbn];
+    book.reviews=[];
+    console.log(book);
+    res.send("Review successfully deleted");
 });
 
 module.exports.authenticated = regd_users;
